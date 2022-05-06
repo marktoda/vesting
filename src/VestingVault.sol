@@ -70,14 +70,14 @@ abstract contract VestingVault is
     /**
      * @inheritdoc IVestingVault
      */
-    function vested() public view returns (uint256) {
+    function vested() public virtual view returns (uint256) {
         return vestedOn(block.timestamp);
     }
 
     /**
      * @inheritdoc IVestingVault
      */
-    function unvested() public view returns (uint256) {
+    function unvested() public virtual view returns (uint256) {
         return token().balanceOf(address(this)) - vested();
     }
 
