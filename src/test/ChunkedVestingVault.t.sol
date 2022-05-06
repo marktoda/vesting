@@ -120,7 +120,8 @@ contract ChunkedVestingVaultTest is DSTestPlus {
         if (amount == 0) amount = 1;
         uint256 totalSupply = token.totalSupply();
         // otherwise we overflow the token
-        if (amount > type(uint256).max - totalSupply) amount = type(uint256).max - totalSupply;
+        if (amount > type(uint256).max - totalSupply)
+            amount = type(uint256).max - totalSupply;
         token.mint(address(this), amount);
         token.approve(address(factory), amount);
         uint256[] memory amounts = new uint256[](1);
