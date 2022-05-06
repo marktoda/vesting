@@ -7,7 +7,7 @@ import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts
 import {ChunkedVestingVault} from "./ChunkedVestingVault.sol";
 import {IVestingVaultFactory} from "./interfaces/IVestingVaultFactory.sol";
 
-contract ChunkedVestingVaultFactory is IVestingVaultFactory{
+contract ChunkedVestingVaultFactory is IVestingVaultFactory {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using ClonesWithImmutableArgs for address;
 
@@ -21,6 +21,10 @@ contract ChunkedVestingVaultFactory is IVestingVaultFactory{
      * @notice Creates a new vesting vault
      * @param token The ERC20 token to vest over time
      * @param beneficiary The address who will receive tokens over time
+     * @param amounts The amounts to be vested per chunk.
+     *  This is assumed to be sorted in unlock order
+     * @param timestamps The amounts to be vested per chunk.
+     *  This is assumed to be sorted in ascending time order
      */
     function createVault(
         address token,

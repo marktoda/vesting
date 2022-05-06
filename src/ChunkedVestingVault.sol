@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {VestingVault} from "./VestingVault.sol";
+import {ChunkedVestingVaultArgs} from "./helpers/ChunkedVestingVaultArgs.sol";
 
 /**
  * @notice VestingVault contract for a series of chunked token releases
@@ -14,44 +15,8 @@ import {VestingVault} from "./VestingVault.sol";
  *  - slot 3-x - uint256[] amounts
  *  - slot x-y - uint256[] timestamps
  */
-contract ChunkedVestingVault is VestingVault {
+contract ChunkedVestingVault is VestingVault, ChunkedVestingVaultArgs {
     using SafeERC20Upgradeable for IERC20Upgradeable;
-
-    /**
-     * @notice The token which is being vested
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return the token which is being vested
-     */
-    function vestingPeriods() public pure returns (uint256) {
-        // starts at 40 because of the parent VestingVault uses bytes 0-39 for token and beneficiary
-        return _getArgUint256(40);
-    }
-
-    /**
-     * @notice The array of chunked amounts to be vested
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return the array of chunked amounts to be vested
-     */
-    function amounts() public pure returns (uint256[] memory) {
-        return _getArgUint256Array(72, uint64(vestingPeriods()));
-    }
-
-    /**
-     * @notice The array of timestamps at which chunks of tokens are vested
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @dev These are expected to be already sorted in timestamp order
-     * @return the timestamps at which chunks of tokens are vested
-     */
-    function timestamps() public pure returns (uint256[] memory) {
-        return
-            _getArgUint256Array(
-                72 + (32 * vestingPeriods()),
-                uint64(vestingPeriods())
-            );
-    }
 
     /// @notice The number of vesting chunks used up so far
     uint256 public vestedChunks;
@@ -115,14 +80,11 @@ contract ChunkedVestingVault is VestingVault {
         view
         returns (uint256 amount, uint256 chunks)
     {
-        uint256[] memory _amounts = amounts();
-        uint256[] memory _timestamps = timestamps();
-
         uint256 total;
         for (uint256 i = vestedChunks; i < vestingPeriods(); i++) {
-            if (timestamp >= _timestamps[i]) {
+            if (timestamp >= timestampAtIndex(i)) {
                 // then we have vested this chunk
-                total += _amounts[i];
+                total += amountAtIndex(i);
             } else {
                 // return early because we haven't gotten this far in the vesting cycle yet
                 return (total, i);
