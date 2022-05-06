@@ -8,7 +8,7 @@ import {Clone} from "clones-with-immutable-args/Clone.sol";
 import {IVestingVault} from "./interfaces/IVestingVault.sol";
 
 /**
- * @notice Generic VestingVault contract which handles storage and claimance of vesting tokens
+ * @notice Generic VestingVault contract which handles storage and claiming of vesting tokens
  * @dev This contract is meant to be extended with handling for vesting schedules
  * @dev immutable args:
  *  - slot 0 - address token (20 bytes)
