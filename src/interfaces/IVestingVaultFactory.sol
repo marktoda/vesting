@@ -9,7 +9,7 @@ pragma solidity 0.8.10;
  * functions
  */
 interface IVestingVaultFactory {
-    event VaultCreated(address token, address beneficiary);
+    event VaultCreated(address token, address beneficiary, address vault);
 
     /// @notice Some parameters are invalid
     error InvalidParams();
