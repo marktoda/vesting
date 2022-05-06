@@ -115,6 +115,45 @@ contract ChunkedVestingVaultTest is DSTestPlus {
         }
     }
 
+    function testSingleUnlock(uint256 amount) public {
+        // throws on amount 0, tested below
+        if (amount == 0) amount = 1;
+        uint256 totalSupply = token.totalSupply();
+        // otherwise we overflow the token
+        if (amount > type(uint256).max - totalSupply) amount = type(uint256).max - totalSupply;
+        token.mint(address(this), amount);
+        token.approve(address(factory), amount);
+        uint256[] memory amounts = new uint256[](1);
+        uint256[] memory timestamps = new uint256[](1);
+        amounts[0] = amount;
+        timestamps[0] = initialTimestamp + (4 * 86400 * 365);
+        vault = ChunkedVestingVault(
+            factory.createVault(
+                address(token),
+                address(beneficiary),
+                amounts,
+                timestamps
+            )
+        );
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), amount);
+        hevm.warp(initialTimestamp + (1 * 86400 * 365));
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), amount);
+        hevm.warp(initialTimestamp + (2 * 86400 * 365));
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), amount);
+        hevm.warp(initialTimestamp + (3 * 86400 * 365));
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), amount);
+
+        hevm.warp(initialTimestamp + (4 * 86400 * 365));
+        assertEq(vault.vested(), amount);
+        assertEq(vault.unvested(), 0);
+
+        assertClaimAmount(amount);
+    }
+
     // note: can parameterize count & amountPerUnlock,
     // but it is very slow
     // function testManyUnlocks(uint8 count, uint64 amountPerUnlock) public {
@@ -143,6 +182,46 @@ contract ChunkedVestingVaultTest is DSTestPlus {
             hevm.warp(initialTimestamp + ((i + 1) * 86400));
             assertClaimAmount(amountPerUnlock);
         }
+    }
+
+    function testDifferingAmounts() public {
+        uint256 total = 100 + 300 + 500;
+        token.mint(address(this), total);
+        token.approve(address(factory), total);
+        vault = ChunkedVestingVault(
+            factory.createVault(
+                address(token),
+                address(beneficiary),
+                makeArray(100, 300, 500),
+                makeArray(
+                    initialTimestamp + 1 days,
+                    initialTimestamp + 2 days,
+                    initialTimestamp + 3 days
+                )
+            )
+        );
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 900);
+        hevm.warp(initialTimestamp + 1 days);
+        assertEq(vault.vested(), 100);
+        assertEq(vault.unvested(), 800);
+        assertClaimAmount(100);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 800);
+
+        hevm.warp(initialTimestamp + 2 days);
+        assertEq(vault.vested(), 300);
+        assertEq(vault.unvested(), 500);
+        assertClaimAmount(300);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 500);
+
+        hevm.warp(initialTimestamp + 3 days);
+        assertEq(vault.vested(), 500);
+        assertEq(vault.unvested(), 0);
+        assertClaimAmount(500);
+        assertEq(vault.vested(), 0);
+        assertEq(vault.unvested(), 0);
     }
 
     function testFailTooManyAmounts() public {
