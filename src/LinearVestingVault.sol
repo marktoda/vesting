@@ -12,8 +12,7 @@ import {VestingVault} from "./VestingVault.sol";
  *  - slot 1 - address beneficiary (20 bytes) (in VestingVault)
  *  - slot 2 - uint256 vestStartTimestamp
  *  - slot 3 - uint256 vestEndTimestamp
- *  - slot 4 - uint256 timestamps
- *  - slot 5 - uint256 totalAmount
+ *  - slot 4 - uint256 totalAmount
  */
 contract LinearVestingVault is VestingVault {
     using SafeERC20Upgradeable for IERC20Upgradeable;
