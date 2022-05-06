@@ -1,0 +1,19 @@
+{
+  "name": "vesting",
+  "version": "0.0.1",
+  "description": "Generic vesting vaults for solidity",
+  "files": [
+    "src/**/*.sol"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marktoda/vesting.git"
+  },
+  "devDependencies": {
+    "prettier": "^2.3.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.13"
+  },
+  "scripts": {
+    "lint": "prettier --write src/*.sol && prettier --write src/**/*.sol"
+  }
+}
