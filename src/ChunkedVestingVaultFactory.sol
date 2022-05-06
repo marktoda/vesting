@@ -5,13 +5,11 @@ import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmu
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {ChunkedVestingVault} from "./ChunkedVestingVault.sol";
+import {IVestingVaultFactory} from "./interfaces/IVestingVaultFactory.sol";
 
-contract ChunkedVestingVaultFactory {
+contract ChunkedVestingVaultFactory is IVestingVaultFactory{
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using ClonesWithImmutableArgs for address;
-
-    /// @notice Some parameters are invalid
-    error InvalidParams();
 
     address public immutable implementation;
 
@@ -51,6 +49,8 @@ contract ChunkedVestingVaultFactory {
         );
         IERC20Upgradeable(token).approve(address(clone), totalTokens);
         clone.initialize();
+
+        emit VaultCreated(token, beneficiary);
         return address(clone);
     }
 }
