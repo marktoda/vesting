@@ -26,17 +26,11 @@ interface IVestingVault {
 
     /**
      * @notice The token which is being vested
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return the token which is being vested
      */
     function token() external pure returns (IERC20Upgradeable);
 
     /**
      * @notice The address who the tokens are being vested to
-     * @dev using ClonesWithImmutableArgs pattern here to save gas
-     * @dev https://github.com/wighawag/clones-with-immutable-args
-     * @return The beneficiary address
      */
     function beneficiary() external pure returns (address);
 

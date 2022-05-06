@@ -23,6 +23,9 @@ abstract contract VestingVault is
 
     /**
      * @inheritdoc IVestingVault
+     * @dev using ClonesWithImmutableArgs pattern here to save gas
+     * @dev https://github.com/wighawag/clones-with-immutable-args
+     * @return the token which is being vested
      */
     function token() public pure returns (IERC20Upgradeable) {
         return IERC20Upgradeable(_getArgAddress(0));
@@ -30,6 +33,9 @@ abstract contract VestingVault is
 
     /**
      * @inheritdoc IVestingVault
+     * @dev using ClonesWithImmutableArgs pattern here to save gas
+     * @dev https://github.com/wighawag/clones-with-immutable-args
+     * @return The beneficiary address
      */
     function beneficiary() public pure returns (address) {
         return _getArgAddress(20);
@@ -70,14 +76,14 @@ abstract contract VestingVault is
     /**
      * @inheritdoc IVestingVault
      */
-    function vested() public virtual view returns (uint256) {
+    function vested() public view virtual returns (uint256) {
         return vestedOn(block.timestamp);
     }
 
     /**
      * @inheritdoc IVestingVault
      */
-    function unvested() public virtual view returns (uint256) {
+    function unvested() public view virtual returns (uint256) {
         return token().balanceOf(address(this)) - vested();
     }
 
