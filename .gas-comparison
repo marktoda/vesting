@@ -1,0 +1,28 @@
+
+# Tests run with storage instead of immutable args
+Running 11 tests for src/test/ChunkedVestingVaultStorage.t.sol:ChunkedVestingVaultStorageTest
+[PASS] testClaimPartial() (gas: 183208)
+[PASS] testDifferingAmounts() (gas: 545082)
+[PASS] testFailClaimUnauthorized(uint256) (runs: 256, μ: 92094, ~: 92094)
+[PASS] testFailClaimZero() (gas: 41685)
+[PASS] testFailTooManyAmounts() (gas: 15334)
+[PASS] testFailTooManyTimestamps() (gas: 15435)
+[PASS] testInstantiation() (gas: 62557)
+[PASS] testManyUnlocks() (gas: 34034260)
+[PASS] testSingleUnlock(uint256) (runs: 256, μ: 402109, ~: 402097)
+[PASS] testVestAllThenClaim() (gas: 146317)
+[PASS] testWarpAndClaim(uint256) (runs: 256, μ: 94849, ~: 113309)
+Test result: ok. 11 passed; 0 failed; finished in 319.46ms
+
+# Tests run with immutable args
+[PASS] testClaimPartial() (gas: 175621)
+[PASS] testDifferingAmounts() (gas: 375304)
+[PASS] testFailClaimUnauthorized(uint256) (runs: 256, μ: 90222, ~: 90222)
+[PASS] testFailClaimZero() (gas: 34582)
+[PASS] testFailTooManyAmounts() (gas: 14494)
+[PASS] testFailTooManyTimestamps() (gas: 14598)
+[PASS] testInstantiation() (gas: 45895)
+[PASS] testManyUnlocks() (gas: 27770461)
+[PASS] testSingleUnlock(uint256) (runs: 256, μ: 303555, ~: 303566)
+[PASS] testVestAllThenClaim() (gas: 136406)
+[PASS] testWarpAndClaim(uint256) (runs: 256, μ: 83427, ~: 95396)

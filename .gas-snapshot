@@ -1,0 +1,8 @@
+ChunkedVestingVaultTest:testClaimPartial() (gas: 175621)
+ChunkedVestingVaultTest:testDifferingAmounts() (gas: 375304)
+ChunkedVestingVaultTest:testFailClaimZero() (gas: 34582)
+ChunkedVestingVaultTest:testFailTooManyAmounts() (gas: 14494)
+ChunkedVestingVaultTest:testFailTooManyTimestamps() (gas: 14598)
+ChunkedVestingVaultTest:testInstantiation() (gas: 45895)
+ChunkedVestingVaultTest:testManyUnlocks() (gas: 27770461)
+ChunkedVestingVaultTest:testVestAllThenClaim() (gas: 136406)
