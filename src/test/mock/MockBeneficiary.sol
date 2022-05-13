@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
-import {ChunkedVestingVault} from "../../ChunkedVestingVault.sol";
+import {IVestingVault} from "../../interfaces/IVestingVault.sol";
 
 contract MockBeneficiary {
-    function claim(ChunkedVestingVault vault) public {
+    function claim(IVestingVault vault) public {
         vault.claim();
     }
 }

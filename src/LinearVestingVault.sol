@@ -56,6 +56,7 @@ contract LinearVestingVault is VestingVault {
      * @dev this pulls in the required ERC20 tokens from the sender to setup
      */
     function initialize() public initializer {
+        if (vestStartTimestamp() > vestEndTimestamp()) revert InvalidParams();
         VestingVault.initialize(totalAmount());
     }
 
