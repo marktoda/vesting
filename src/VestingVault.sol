@@ -41,13 +41,18 @@ abstract contract VestingVault is
         return _getArgAddress(20);
     }
 
+    modifier onlyBeneficiary() {
+        if (msg.sender != beneficiary()) revert Unauthorized();
+        _;
+    }
+
     /**
      * @notice Initializes the vesting vault
      * @param amount The amount of the ERC20 token to vest for the beneficiary in total
      * @dev this contract should have been deployed with ClonesWithImmutableArgs in order to
      *  properly set up the immutable token and beneficiary args
      */
-    function initialize(uint256 amount) internal onlyInitializing {
+    function initialize(uint256 amount) internal virtual onlyInitializing {
         ReentrancyGuardUpgradeable.__ReentrancyGuard_init();
         if (address(token()) == address(0)) revert InvalidParams();
         if (beneficiary() == address(0)) revert InvalidParams();
@@ -62,9 +67,7 @@ abstract contract VestingVault is
     /**
      * @inheritdoc IVestingVault
      */
-    function claim() external nonReentrant {
-        if (msg.sender != beneficiary()) revert Unauthorized();
-
+    function claim() external nonReentrant onlyBeneficiary {
         uint256 vestedAmount = vested();
         if (vestedAmount == 0) revert NotVested();
 

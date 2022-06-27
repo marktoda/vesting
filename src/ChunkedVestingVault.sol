@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {VestingVault} from "./VestingVault.sol";
+import {ClawbackVestingVault} from "./ClawbackVestingVault.sol";
 import {ChunkedVestingVaultArgs} from "./helpers/ChunkedVestingVaultArgs.sol";
 
 /**
@@ -15,7 +16,7 @@ import {ChunkedVestingVaultArgs} from "./helpers/ChunkedVestingVaultArgs.sol";
  *  - slot 3-x - uint256[] amounts
  *  - slot x-y - uint256[] timestamps
  */
-contract ChunkedVestingVault is VestingVault, ChunkedVestingVaultArgs {
+contract ChunkedVestingVault is ClawbackVestingVault, ChunkedVestingVaultArgs {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     /// @notice The number of vesting chunks used up so far
@@ -27,23 +28,25 @@ contract ChunkedVestingVault is VestingVault, ChunkedVestingVaultArgs {
      *  override the initializer without breaking the reentrancy protection in
      *  `initializer`. for more info read
      *  https://github.com/OpenZeppelin/openzeppelin-contracts/commit/553c8fdec708ea10dd5f4a2977364af7a562566f
+     * @param admin The address which can clawback unvested tokens
      */
-    function initialize() public virtual initializer {
-        _initialize();
+    function initialize(address admin) public virtual initializer {
+        _initialize(admin);
     }
 
     /**
      * @notice Initializes the vesting vault
      * @dev this pulls in the required ERC20 tokens from the sender to setup
+     * @param admin The address which can clawback unvested tokens
      */
-    function _initialize() internal onlyInitializing {
+    function _initialize(address admin) internal onlyInitializing {
         // calculate total amount of tokens over the lifetime of the vault
         (uint256 amount, uint256 chunks) = getVestedAmountAndChunks(
             type(uint256).max
         );
         if (chunks != vestingPeriods()) revert InvalidParams();
 
-        VestingVault.initialize(amount);
+        ClawbackVestingVault.initialize(amount, admin);
     }
 
     /**
@@ -62,10 +65,8 @@ contract ChunkedVestingVault is VestingVault, ChunkedVestingVaultArgs {
      * @inheritdoc VestingVault
      */
     function onClaim(uint256 amount) internal virtual override {
-        (uint256 total, uint256 chunks) = getVestedAmountAndChunks(
-            block.timestamp
-        );
-        if (amount != total) revert InvalidClaim();
+        (uint256 total, uint256 chunks) = getNextChunkForAmount(amount);
+        if (total != amount) revert InvalidClaim();
         vestedChunks = chunks;
     }
 
@@ -88,6 +89,26 @@ contract ChunkedVestingVault is VestingVault, ChunkedVestingVaultArgs {
             } else {
                 // return early because we haven't gotten this far in the vesting cycle yet
                 return (total, i);
+            }
+        }
+        return (total, vestingPeriods());
+    }
+
+    /**
+     * @notice helper function to get the next chunk index after the given amount
+     * @param amount The amount of tokens to get chunk index for
+     * @return total The total amount vested from last vest to the given index
+     * @return chunks The total number of chunks used so far
+     */
+    function getNextChunkForAmount(uint256 amount)
+        internal
+        view
+        returns (uint256 total, uint256 chunks)
+    {
+        for (uint256 i = vestedChunks; i < vestingPeriods(); i++) {
+            total += amountAtIndex(i);
+            if (total >= amount) {
+                return (total, i + 1);
             }
         }
         return (total, vestingPeriods());
