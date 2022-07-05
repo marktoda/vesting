@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
 
-import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
+import {Test} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 import {MockERC20} from "./mock/MockERC20.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {LinearVestingVaultFactory} from "../LinearVestingVaultFactory.sol";
 import {LinearVestingVault} from "../LinearVestingVault.sol";
 
-contract LinearVestingVaultTest is DSTestPlus {
+contract LinearVestingVaultTest is Test {
     LinearVestingVaultFactory factory;
     LinearVestingVault vault;
     MockERC20 token;
@@ -73,13 +74,13 @@ contract LinearVestingVaultTest is DSTestPlus {
         uint256 totalAmount = vault.totalAmount();
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), totalAmount);
-        hevm.warp(initialTimestamp + 10 days);
+        vm.warp(initialTimestamp + 10 days);
         assertEq(vault.vested(), totalAmount / 10);
         assertEq(vault.unvested(), (totalAmount / 10) * 9);
-        hevm.warp(initialTimestamp + 20 days);
+        vm.warp(initialTimestamp + 20 days);
         assertEq(vault.vested(), (totalAmount / 10) * 2);
         assertEq(vault.unvested(), (totalAmount / 10) * 8);
-        hevm.warp(initialTimestamp + 100 days);
+        vm.warp(initialTimestamp + 100 days);
         assertEq(vault.vested(), totalAmount);
         assertEq(vault.unvested(), 0);
 
@@ -94,21 +95,21 @@ contract LinearVestingVaultTest is DSTestPlus {
 
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), totalAmount);
-        hevm.warp(initialTimestamp + 10 days);
+        vm.warp(initialTimestamp + 10 days);
         assertEq(vault.vested(), totalAmount / 10);
         assertEq(vault.unvested(), (totalAmount / 10) * 9);
         assertClaimAmount(totalAmount / 10);
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), (totalAmount / 10) * 9);
 
-        hevm.warp(initialTimestamp + 20 days);
+        vm.warp(initialTimestamp + 20 days);
         assertEq(vault.vested(), totalAmount / 10);
         assertEq(vault.unvested(), (totalAmount / 10) * 8);
         assertClaimAmount(totalAmount / 10);
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), (totalAmount / 10) * 8);
 
-        hevm.warp(initialTimestamp + 100 days);
+        vm.warp(initialTimestamp + 100 days);
         assertEq(vault.vested(), (totalAmount / 10) * 8);
         assertEq(vault.unvested(), 0);
         assertClaimAmount((totalAmount / 10) * 8);
@@ -129,7 +130,7 @@ contract LinearVestingVaultTest is DSTestPlus {
     }
 
     function testFailClaimUnauthorized(uint256 timestamp) public {
-        hevm.warp(timestamp);
+        vm.warp(timestamp);
         MockBeneficiary fakeBeneficiary = new MockBeneficiary();
         fakeBeneficiary.claim(vault);
     }

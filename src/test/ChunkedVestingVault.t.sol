@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
 
-import {DSTestPlus} from "solmate/test/utils/DSTestPlus.sol";
+import {Test} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 import {MockERC20} from "./mock/MockERC20.sol";
 import {MockBeneficiary} from "./mock/MockBeneficiary.sol";
 import {ChunkedVestingVaultFactory} from "../ChunkedVestingVaultFactory.sol";
 import {ChunkedVestingVault} from "../ChunkedVestingVault.sol";
+import {IVestingVault} from "../interfaces/IVestingVault.sol";
 
-contract ChunkedVestingVaultTest is DSTestPlus {
+contract ChunkedVestingVaultTest is Test {
     ChunkedVestingVaultFactory factory;
     ChunkedVestingVault vault;
+    ChunkedVestingVault clawbackVault;
     MockERC20 token;
     MockBeneficiary beneficiary;
     uint256 initialTimestamp;
@@ -21,12 +24,27 @@ contract ChunkedVestingVaultTest is DSTestPlus {
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
 
-        token.mint(address(this), 300);
-        token.approve(address(factory), 300);
+        token.mint(address(this), 600);
+        token.approve(address(factory), 600);
         vault = ChunkedVestingVault(
             factory.createVault(
                 address(token),
                 address(beneficiary),
+                address(0),
+                makeArray(100, 100, 100),
+                makeArray(
+                    initialTimestamp + 1 days,
+                    initialTimestamp + 2 days,
+                    initialTimestamp + 3 days
+                )
+            )
+        );
+
+        clawbackVault = ChunkedVestingVault(
+            factory.createVault(
+                address(token),
+                address(beneficiary),
+                address(this),
                 makeArray(100, 100, 100),
                 makeArray(
                     initialTimestamp + 1 days,
@@ -58,16 +76,21 @@ contract ChunkedVestingVaultTest is DSTestPlus {
         assertEq(vault.vestedOn(initialTimestamp + 3 days), 300);
     }
 
+    function testRevertReinitialize() public {
+        vm.expectRevert("Initializable: contract is already initialized");
+        vault.initialize(address(this));
+    }
+
     function testVestAllThenClaim() public {
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 300);
-        hevm.warp(initialTimestamp + 1 days);
+        vm.warp(initialTimestamp + 1 days);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 200);
-        hevm.warp(initialTimestamp + 2 days);
+        vm.warp(initialTimestamp + 2 days);
         assertEq(vault.vested(), 200);
         assertEq(vault.unvested(), 100);
-        hevm.warp(initialTimestamp + 3 days);
+        vm.warp(initialTimestamp + 3 days);
         assertEq(vault.vested(), 300);
         assertEq(vault.unvested(), 0);
 
@@ -80,21 +103,21 @@ contract ChunkedVestingVaultTest is DSTestPlus {
     function testClaimPartial() public {
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 300);
-        hevm.warp(initialTimestamp + 1 days);
+        vm.warp(initialTimestamp + 1 days);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 200);
         assertClaimAmount(100);
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 200);
 
-        hevm.warp(initialTimestamp + 2 days);
+        vm.warp(initialTimestamp + 2 days);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 100);
         assertClaimAmount(100);
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 100);
 
-        hevm.warp(initialTimestamp + 3 days);
+        vm.warp(initialTimestamp + 3 days);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 0);
         assertClaimAmount(100);
@@ -103,7 +126,7 @@ contract ChunkedVestingVaultTest is DSTestPlus {
     }
 
     function testWarpAndClaim(uint256 timestamp) public {
-        hevm.warp(timestamp);
+        vm.warp(timestamp);
         if (timestamp >= initialTimestamp + 3 days) {
             assertClaimAmount(300);
         } else if (timestamp >= initialTimestamp + 2 days) {
@@ -132,23 +155,24 @@ contract ChunkedVestingVaultTest is DSTestPlus {
             factory.createVault(
                 address(token),
                 address(beneficiary),
+                address(0),
                 amounts,
                 timestamps
             )
         );
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), amount);
-        hevm.warp(initialTimestamp + (1 * 86400 * 365));
+        vm.warp(initialTimestamp + (1 * 86400 * 365));
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), amount);
-        hevm.warp(initialTimestamp + (2 * 86400 * 365));
+        vm.warp(initialTimestamp + (2 * 86400 * 365));
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), amount);
-        hevm.warp(initialTimestamp + (3 * 86400 * 365));
+        vm.warp(initialTimestamp + (3 * 86400 * 365));
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), amount);
 
-        hevm.warp(initialTimestamp + (4 * 86400 * 365));
+        vm.warp(initialTimestamp + (4 * 86400 * 365));
         assertEq(vault.vested(), amount);
         assertEq(vault.unvested(), 0);
 
@@ -174,13 +198,14 @@ contract ChunkedVestingVaultTest is DSTestPlus {
             factory.createVault(
                 address(token),
                 address(beneficiary),
+                address(0),
                 amounts,
                 timestamps
             )
         );
 
         for (uint256 i = 0; i < count; i++) {
-            hevm.warp(initialTimestamp + ((i + 1) * 86400));
+            vm.warp(initialTimestamp + ((i + 1) * 86400));
             assertClaimAmount(amountPerUnlock);
         }
     }
@@ -193,6 +218,7 @@ contract ChunkedVestingVaultTest is DSTestPlus {
             factory.createVault(
                 address(token),
                 address(beneficiary),
+                address(0),
                 makeArray(100, 300, 500),
                 makeArray(
                     initialTimestamp + 1 days,
@@ -203,21 +229,21 @@ contract ChunkedVestingVaultTest is DSTestPlus {
         );
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 900);
-        hevm.warp(initialTimestamp + 1 days);
+        vm.warp(initialTimestamp + 1 days);
         assertEq(vault.vested(), 100);
         assertEq(vault.unvested(), 800);
         assertClaimAmount(100);
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 800);
 
-        hevm.warp(initialTimestamp + 2 days);
+        vm.warp(initialTimestamp + 2 days);
         assertEq(vault.vested(), 300);
         assertEq(vault.unvested(), 500);
         assertClaimAmount(300);
         assertEq(vault.vested(), 0);
         assertEq(vault.unvested(), 500);
 
-        hevm.warp(initialTimestamp + 3 days);
+        vm.warp(initialTimestamp + 3 days);
         assertEq(vault.vested(), 500);
         assertEq(vault.unvested(), 0);
         assertClaimAmount(500);
@@ -235,6 +261,7 @@ contract ChunkedVestingVaultTest is DSTestPlus {
             factory.createVault(
                 address(token),
                 address(beneficiary),
+                address(0),
                 amounts,
                 makeArray(
                     initialTimestamp + 1 days,
@@ -255,6 +282,7 @@ contract ChunkedVestingVaultTest is DSTestPlus {
             factory.createVault(
                 address(token),
                 address(beneficiary),
+                address(0),
                 makeArray(100, 100, 100),
                 timestamps
             )
@@ -262,13 +290,83 @@ contract ChunkedVestingVaultTest is DSTestPlus {
     }
 
     function testFailClaimUnauthorized(uint256 timestamp) public {
-        hevm.warp(timestamp);
+        vm.warp(timestamp);
         MockBeneficiary fakeBeneficiary = new MockBeneficiary();
         fakeBeneficiary.claim(vault);
     }
 
     function testFailClaimZero() public {
         assertClaimAmount(0);
+    }
+
+    function testClawbackAll() public {
+        assertEq(clawbackVault.vested(), 0);
+        assertEq(clawbackVault.unvested(), 300);
+        assertEq(token.balanceOf(address(this)), 0);
+        assertEq(token.balanceOf(address(clawbackVault)), 300);
+        clawbackVault.clawback();
+        assertGt(clawbackVault.clawbackTimestamp(), 0);
+        assertEq(clawbackVault.vested(), 0);
+        assertEq(clawbackVault.unvested(), 0);
+        assertEq(token.balanceOf(address(clawbackVault)), 0);
+        assertEq(token.balanceOf(address(this)), 300);
+        vm.warp(initialTimestamp + 3 days);
+        assertEq(clawbackVault.vested(), 0);
+        assertEq(clawbackVault.unvested(), 0);
+    }
+
+    function testClawbackNone() public {
+        vm.warp(initialTimestamp + 3 days);
+
+        assertEq(clawbackVault.vested(), 300);
+        assertEq(clawbackVault.unvested(), 0);
+        assertEq(token.balanceOf(address(this)), 0);
+        assertEq(token.balanceOf(address(clawbackVault)), 300);
+        clawbackVault.clawback();
+        assertGt(clawbackVault.clawbackTimestamp(), 0);
+        assertEq(clawbackVault.vested(), 300);
+        assertEq(clawbackVault.unvested(), 0);
+        assertEq(token.balanceOf(address(clawbackVault)), 300);
+        assertEq(token.balanceOf(address(this)), 0);
+
+        uint256 initialBalance = token.balanceOf(address(beneficiary));
+        beneficiary.claim(clawbackVault);
+        assertEq(initialBalance + 300, token.balanceOf(address(beneficiary)));
+        assertEq(token.balanceOf(address(clawbackVault)), 0);
+    }
+
+    function testClawbackPartial() public {
+        vm.warp(initialTimestamp + 1 days);
+
+        assertEq(clawbackVault.vested(), 100);
+        assertEq(clawbackVault.unvested(), 200);
+        assertEq(token.balanceOf(address(this)), 0);
+        assertEq(token.balanceOf(address(clawbackVault)), 300);
+        clawbackVault.clawback();
+        assertGt(clawbackVault.clawbackTimestamp(), 0);
+        assertEq(clawbackVault.vested(), 100);
+        assertEq(clawbackVault.unvested(), 0);
+        assertEq(token.balanceOf(address(clawbackVault)), 100);
+        assertEq(token.balanceOf(address(this)), 200);
+
+        vm.warp(initialTimestamp + 3 days);
+
+        uint256 initialBalance = token.balanceOf(address(beneficiary));
+        beneficiary.claim(clawbackVault);
+        assertEq(initialBalance + 100, token.balanceOf(address(beneficiary)));
+        assertEq(token.balanceOf(address(clawbackVault)), 0);
+    }
+
+    function testClawbackAdmin() public {
+        assertEq(vault.owner(), address(0));
+        assertEq(clawbackVault.owner(), address(this));
+        clawbackVault.transferOwnership(address(0));
+        assertEq(clawbackVault.owner(), address(0));
+    }
+
+    function testRevertClawback() public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        vault.clawback();
     }
 
     function assertClaimAmount(uint256 amount) internal {
@@ -293,5 +391,15 @@ contract ChunkedVestingVaultTest is DSTestPlus {
         result[1] = b;
         result[2] = c;
         return result;
+    }
+
+    function assertUintArrayEq(uint256[] memory a, uint256[] memory b)
+        internal
+    {
+        require(a.length == b.length, "LENGTH_MISMATCH");
+
+        for (uint256 i = 0; i < a.length; i++) {
+            assertEq(a[i], b[i]);
+        }
     }
 }
