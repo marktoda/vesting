@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
+
 import {Clone} from "clones-with-immutable-args/Clone.sol";
 
 /**
@@ -36,11 +37,9 @@ contract ChunkedVestingVaultArgs is Clone {
      * @return the timestamps at which chunks of tokens are vested
      */
     function timestamps() public pure returns (uint256[] memory) {
-        return
-            _getArgUint256Array(
-                72 + (32 * vestingPeriods()),
-                uint64(vestingPeriods())
-            );
+        return _getArgUint256Array(
+            72 + (32 * vestingPeriods()), uint64(vestingPeriods())
+        );
     }
 
     /**

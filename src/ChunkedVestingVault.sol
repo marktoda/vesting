@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
 
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20Upgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {VestingVault} from "./VestingVault.sol";
 import {ClawbackVestingVault} from "./ClawbackVestingVault.sol";
 import {ChunkedVestingVaultArgs} from "./helpers/ChunkedVestingVaultArgs.sol";
@@ -10,11 +12,11 @@ import {ChunkedVestingVaultArgs} from "./helpers/ChunkedVestingVaultArgs.sol";
 /**
  * @notice VestingVault contract for a series of chunked token releases
  * @dev immutable args:
- *  - slot 0 - address token (20 bytes) (in VestingVault)
- *  - slot 1 - address beneficiary (20 bytes) (in VestingVault)
- *  - slot 2 - uint256 vestingPeriods
- *  - slot 3-x - uint256[] amounts
- *  - slot x-y - uint256[] timestamps
+ * - slot 0 - address token (20 bytes) (in VestingVault)
+ * - slot 1 - address beneficiary (20 bytes) (in VestingVault)
+ * - slot 2 - uint256 vestingPeriods
+ * - slot 3-x - uint256[] amounts
+ * - slot x-y - uint256[] timestamps
  */
 contract ChunkedVestingVault is ClawbackVestingVault, ChunkedVestingVaultArgs {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -25,9 +27,9 @@ contract ChunkedVestingVault is ClawbackVestingVault, ChunkedVestingVaultArgs {
     /**
      * @notice Initializes the vesting vault
      * @dev this is separate from initialize() so an inheritor can
-     *  override the initializer without breaking the reentrancy protection in
-     *  `initializer`. for more info read
-     *  https://github.com/OpenZeppelin/openzeppelin-contracts/commit/553c8fdec708ea10dd5f4a2977364af7a562566f
+     * override the initializer without breaking the reentrancy protection in
+     * `initializer`. for more info read
+     * https://github.com/OpenZeppelin/openzeppelin-contracts/commit/553c8fdec708ea10dd5f4a2977364af7a562566f
      * @param admin The address which can clawback unvested tokens
      */
     function initialize(address admin) public virtual initializer {
@@ -41,10 +43,11 @@ contract ChunkedVestingVault is ClawbackVestingVault, ChunkedVestingVaultArgs {
      */
     function _initialize(address admin) internal onlyInitializing {
         // calculate total amount of tokens over the lifetime of the vault
-        (uint256 amount, uint256 chunks) = getVestedAmountAndChunks(
-            type(uint256).max
-        );
-        if (chunks != vestingPeriods()) revert InvalidParams();
+        (uint256 amount, uint256 chunks) =
+            getVestedAmountAndChunks(type(uint256).max);
+        if (chunks != vestingPeriods()) {
+            revert InvalidParams();
+        }
 
         ClawbackVestingVault.initialize(amount, admin);
     }
@@ -58,7 +61,7 @@ contract ChunkedVestingVault is ClawbackVestingVault, ChunkedVestingVaultArgs {
         override
         returns (uint256 amount)
     {
-        (amount, ) = getVestedAmountAndChunks(timestamp);
+        (amount,) = getVestedAmountAndChunks(timestamp);
     }
 
     /**
@@ -66,7 +69,9 @@ contract ChunkedVestingVault is ClawbackVestingVault, ChunkedVestingVaultArgs {
      */
     function onClaim(uint256 amount) internal virtual override {
         (uint256 total, uint256 chunks) = getNextChunkForAmount(amount);
-        if (total != amount) revert InvalidClaim();
+        if (total != amount) {
+            revert InvalidClaim();
+        }
         vestedChunks = chunks;
     }
 

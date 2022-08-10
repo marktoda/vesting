@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
 
-import {ReentrancyGuardUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/security/ReentrancyGuardUpgradeable.sol";
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {ReentrancyGuardUpgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/security/ReentrancyGuardUpgradeable.sol";
+import {SafeERC20Upgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20Upgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {Clone} from "clones-with-immutable-args/Clone.sol";
 import {IVestingVault} from "./interfaces/IVestingVault.sol";
 
@@ -11,8 +14,8 @@ import {IVestingVault} from "./interfaces/IVestingVault.sol";
  * @notice Generic VestingVault contract which handles storage and claiming of vesting tokens
  * @dev This contract is meant to be extended with handling for vesting schedules
  * @dev immutable args:
- *  - slot 0 - address token (20 bytes)
- *  - slot 1 - address beneficiary (20 bytes)
+ * - slot 0 - address token (20 bytes)
+ * - slot 1 - address beneficiary (20 bytes)
  */
 abstract contract VestingVault is
     Clone,
@@ -42,7 +45,9 @@ abstract contract VestingVault is
     }
 
     modifier onlyBeneficiary() {
-        if (msg.sender != beneficiary()) revert Unauthorized();
+        if (msg.sender != beneficiary()) {
+            revert Unauthorized();
+        }
         _;
     }
 
@@ -50,17 +55,19 @@ abstract contract VestingVault is
      * @notice Initializes the vesting vault
      * @param amount The amount of the ERC20 token to vest for the beneficiary in total
      * @dev this contract should have been deployed with ClonesWithImmutableArgs in order to
-     *  properly set up the immutable token and beneficiary args
+     * properly set up the immutable token and beneficiary args
      */
     function initialize(uint256 amount) internal virtual onlyInitializing {
         ReentrancyGuardUpgradeable.__ReentrancyGuard_init();
-        if (address(token()) == address(0)) revert InvalidParams();
-        if (beneficiary() == address(0)) revert InvalidParams();
+        if (address(token()) == address(0)) {
+            revert InvalidParams();
+        }
+        if (beneficiary() == address(0)) {
+            revert InvalidParams();
+        }
 
         IERC20Upgradeable(token()).safeTransferFrom(
-            msg.sender,
-            address(this),
-            amount
+            msg.sender, address(this), amount
         );
     }
 
@@ -69,7 +76,9 @@ abstract contract VestingVault is
      */
     function claim() external nonReentrant onlyBeneficiary {
         uint256 vestedAmount = vested();
-        if (vestedAmount == 0) revert NotVested();
+        if (vestedAmount == 0) {
+            revert NotVested();
+        }
 
         onClaim(vestedAmount);
         token().safeTransfer(beneficiary(), vestedAmount);
@@ -93,7 +102,11 @@ abstract contract VestingVault is
     /**
      * @inheritdoc IVestingVault
      */
-    function vestedOn(uint256 timestamp) public view virtual returns (uint256);
+    function vestedOn(uint256 timestamp)
+        public
+        view
+        virtual
+        returns (uint256);
 
     /**
      * @notice hook for downstream contracts to update vesting schedule based on a claim

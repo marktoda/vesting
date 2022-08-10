@@ -140,11 +140,14 @@ contract ChunkedVestingVaultTest is Test {
 
     function testSingleUnlock(uint256 amount) public {
         // throws on amount 0, tested below
-        if (amount == 0) amount = 1;
+        if (amount == 0) {
+            amount = 1;
+        }
         uint256 totalSupply = token.totalSupply();
         // otherwise we overflow the token
-        if (amount > type(uint256).max - totalSupply)
+        if (amount > type(uint256).max - totalSupply) {
             amount = type(uint256).max - totalSupply;
+        }
         token.mint(address(this), amount);
         token.approve(address(factory), amount);
         uint256[] memory amounts = new uint256[](1);
@@ -153,11 +156,7 @@ contract ChunkedVestingVaultTest is Test {
         timestamps[0] = initialTimestamp + (4 * 86400 * 365);
         vault = ChunkedVestingVault(
             factory.createVault(
-                address(token),
-                address(beneficiary),
-                address(0),
-                amounts,
-                timestamps
+                address(token), address(beneficiary), address(0), amounts, timestamps
             )
         );
         assertEq(vault.vested(), 0);
@@ -196,11 +195,7 @@ contract ChunkedVestingVaultTest is Test {
 
         vault = ChunkedVestingVault(
             factory.createVault(
-                address(token),
-                address(beneficiary),
-                address(0),
-                amounts,
-                timestamps
+                address(token), address(beneficiary), address(0), amounts, timestamps
             )
         );
 
@@ -374,18 +369,15 @@ contract ChunkedVestingVaultTest is Test {
         uint256 initialBalance = token.balanceOf(address(beneficiary));
         uint256 initialVaultBalance = token.balanceOf(address(vault));
         beneficiary.claim(vault);
-        assertEq(
-            initialBalance + amount,
-            token.balanceOf(address(beneficiary))
-        );
+        assertEq(initialBalance + amount, token.balanceOf(address(beneficiary)));
         assertEq(initialVaultBalance - amount, token.balanceOf(address(vault)));
     }
 
-    function makeArray(
-        uint256 a,
-        uint256 b,
-        uint256 c
-    ) internal pure returns (uint256[] memory) {
+    function makeArray(uint256 a, uint256 b, uint256 c)
+        internal
+        pure
+        returns (uint256[] memory)
+    {
         uint256[] memory result = new uint256[](3);
         result[0] = a;
         result[1] = b;

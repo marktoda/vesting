@@ -21,7 +21,7 @@ contract LinearVestingVaultTest is Test {
         factory = new LinearVestingVaultFactory(address(implementation));
         beneficiary = new MockBeneficiary();
         initialTimestamp = block.timestamp;
-        uint256 amount = 10**18 * 1000;
+        uint256 amount = 10 ** 18 * 1000;
 
         token.mint(address(this), amount);
         token.approve(address(factory), amount);
@@ -41,20 +41,17 @@ contract LinearVestingVaultTest is Test {
         assertEq(address(vault.beneficiary()), address(beneficiary));
         assertEq(vault.vestStartTimestamp(), initialTimestamp);
         assertEq(vault.vestEndTimestamp(), initialTimestamp + 100 days);
-        assertEq(vault.totalAmount(), 10**18 * 1000);
+        assertEq(vault.totalAmount(), 10 ** 18 * 1000);
 
         assertEq(vault.vested(), 0);
         assertEq(
-            vault.vestedOn(initialTimestamp + 10 days),
-            vault.totalAmount() / 10
+            vault.vestedOn(initialTimestamp + 10 days), vault.totalAmount() / 10
         );
         assertEq(
-            vault.vestedOn(initialTimestamp + 50 days),
-            vault.totalAmount() / 2
+            vault.vestedOn(initialTimestamp + 50 days), vault.totalAmount() / 2
         );
         assertEq(
-            vault.vestedOn(initialTimestamp + 100 days),
-            vault.totalAmount()
+            vault.vestedOn(initialTimestamp + 100 days), vault.totalAmount()
         );
     }
 
@@ -63,10 +60,7 @@ contract LinearVestingVaultTest is Test {
         uint256 initialBalance = token.balanceOf(address(beneficiary));
         uint256 initialVaultBalance = token.balanceOf(address(vault));
         beneficiary.claim(vault);
-        assertEq(
-            initialBalance + amount,
-            token.balanceOf(address(beneficiary))
-        );
+        assertEq(initialBalance + amount, token.balanceOf(address(beneficiary)));
         assertEq(initialVaultBalance - amount, token.balanceOf(address(vault)));
     }
 

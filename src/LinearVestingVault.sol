@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.10;
 
-import {IERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC20Upgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {VestingVault} from "./VestingVault.sol";
 
 /**
  * @notice VestingVault contract for a linear release of tokens after a period of time
  * @dev immutable args:
- *  - slot 0 - address token (20 bytes) (in VestingVault)
- *  - slot 1 - address beneficiary (20 bytes) (in VestingVault)
- *  - slot 2 - uint256 vestStartTimestamp
- *  - slot 3 - uint256 vestEndTimestamp
- *  - slot 4 - uint256 totalAmount
+ * - slot 0 - address token (20 bytes) (in VestingVault)
+ * - slot 1 - address beneficiary (20 bytes) (in VestingVault)
+ * - slot 2 - uint256 vestStartTimestamp
+ * - slot 3 - uint256 vestEndTimestamp
+ * - slot 4 - uint256 totalAmount
  */
 contract LinearVestingVault is VestingVault {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -56,7 +58,9 @@ contract LinearVestingVault is VestingVault {
      * @dev this pulls in the required ERC20 tokens from the sender to setup
      */
     function initialize() public initializer {
-        if (vestStartTimestamp() > vestEndTimestamp()) revert InvalidParams();
+        if (vestStartTimestamp() > vestEndTimestamp()) {
+            revert InvalidParams();
+        }
         VestingVault.initialize(totalAmount());
     }
 
@@ -70,10 +74,12 @@ contract LinearVestingVault is VestingVault {
         returns (uint256 amount)
     {
         // total amount multipled by the proportion of vesting period that has passed
-        uint256 totalVested = (totalAmount() *
-            (timestamp - vestStartTimestamp())) /
-            (vestEndTimestamp() - vestStartTimestamp());
-        if (totalVested > totalAmount()) totalVested = totalAmount();
+        uint256 totalVested = (
+            totalAmount() * (timestamp - vestStartTimestamp())
+        ) / (vestEndTimestamp() - vestStartTimestamp());
+        if (totalVested > totalAmount()) {
+            totalVested = totalAmount();
+        }
         return totalVested - amountClaimed;
     }
 
