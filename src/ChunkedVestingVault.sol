@@ -59,6 +59,7 @@ contract ChunkedVestingVault is ClawbackVestingVault, ChunkedVestingVaultArgs {
         public
         view
         override
+        virtual
         returns (uint256 amount)
     {
         (amount,) = getVestedAmountAndChunks(timestamp);
