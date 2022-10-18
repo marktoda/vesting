@@ -79,6 +79,7 @@ contract ChunkedVestingVault is ClawbackVestingVault, ChunkedVestingVaultArgs {
     /**
      * @notice helper function to get the currently vested amount of tokens
      * and the total number of vesting chunks that have been used so far
+     * @param timestamp The time for which vested tokens are being calculated
      * @return amount The amount of tokens currently vested
      * @return chunks The total number of chunks used so far
      */
